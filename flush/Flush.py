@@ -9,7 +9,7 @@ import flush_The_Professional_Geographer
 import flush_Transaction_of_the_Institute_of_British_Geographers
 import flush_The_Geographical_Journal
 
-def flush(which, progress_bar):
+def Flushing(which, progress_bar):
     if which == 0:
         flush_Annals_of_the_Association_of_American_Geographers.flush(progress_bar)
     elif which == 1:
@@ -25,4 +25,4 @@ def flush(which, progress_bar):
 
 if __name__ == "__main__":
     for i in range(5):
-        flush(i)
+        Flushing(i)

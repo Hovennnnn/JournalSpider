@@ -54,7 +54,6 @@ class SeleniumGet:
         self.timeout = timeout
         self.until_xpath = until_xpath
 
-    @retry(tries=5)
     def get_html(self):
         driver = webdriver.Edge(options=self.options, service=EdgeService(driver_path))
 
@@ -87,7 +86,7 @@ class SubCrawl():
         self.parse = parse
         self.timeout = timeout
     
-    @retry(exceptions=AttributeError, tries=5)
+
     def run(self):
         try:
             self.html = SeleniumGet(url=self.url, options=self.options, timeout=self.timeout, until_xpath=self.until_xpath).get_html()
@@ -118,8 +117,8 @@ class SubCrawl():
         if article_title and article_author and article_community and article_publish_date:
             issue_newest_article_lst.append((self.id, Article(article_title, article_author, article_community, article_publish_date)))
         else:
-            print("issue 解析返回值错误", f"重试{self.retry}次")
-            raise AttributeError("issue 解析返回值错误", f"重试{self.retry}次")
+            print("issue 解析返回值错误", "重试")
+            raise AttributeError("issue 解析返回值错误", "重试")
         # except Exception as e:
         #     print(e)
         #     print('解析issue返回值失败！')
@@ -136,14 +135,14 @@ class SubCrawl():
         if article_title and article_author and article_community and article_publish_date:
             online_newest_article_lst.append((self.id, Article(article_title, article_author, article_community, article_publish_date)))
         else:
-            print("online 解析返回值错误", f"重试{self.retry}次")
-            raise AttributeError("online 解析返回值错误", f"重试{self.retry}次")
+            print("online 解析返回值错误", "重试")
+            raise AttributeError("online 解析返回值错误", "重试")
 
         # except Exception as e:
         #     print(e)
         #     print('解析online返回值失败！')
 
-
+@retry()
 def flush(progress_bar):
     global issue_newest_article_lst
     global online_newest_article_lst
@@ -155,10 +154,8 @@ def flush(progress_bar):
         driver.set_page_load_timeout(30)
         # driver.maximize_window()
 
-        try:
-            driver.get(host + site_url)
-        except TimeoutException:
-            print("timeout")
+        driver.get(host + site_url)
+
         try:
             WebDriverWait(driver, timeout=30).until(
                 lambda x: x.find_element(By.XPATH, '//a[@title="Go to latest issue"]')
@@ -167,7 +164,7 @@ def flush(progress_bar):
             driver.execute_script('arguments[0].click();',tmp_element)
         except Exception as e:
             print(e)
-            print('网页加载失败！请检查网站是否可访问')
+            raise RuntimeError('网页加载失败！请检查网站是否可访问')
 
         print("点击latest issue")
 
@@ -177,7 +174,7 @@ def flush(progress_bar):
                 lambda x: x.find_element(By.XPATH, '//div[@class="main-content col-md-8"]//ul[@class="rlist loc"]//div[@class="cover-image__parent-item"]')
             )
         except:
-            print("latest issue 加载失败！")
+            raise RuntimeError("latest issue 加载失败！")
 
         # issue 更新
         issue_html = driver.page_source
@@ -188,6 +185,7 @@ def flush(progress_bar):
 
         issue_newest_article_entry = []
         issue_newest_article_entry.extend(issue_tree.xpath('.//div[@class="issue-items-container bulkDownloadWrapper"][2]/div[@class="issue-item"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
+        print(len(issue_newest_article_entry))
 
         max_page = 1
         online_urls = [host + f"/action/doSearch?SeriesKey=14755661&sortBy=Earliest&pageSize=20&startPage={page}" for page in range(max_page)]
@@ -202,11 +200,13 @@ def flush(progress_bar):
 
             online_newest_article_entry.extend(online_tree.xpath('.//div[@class="item__body"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
 
+        print(len(online_newest_article_entry))
 
         issue_threads = []
         online_threads = []
         future_tasks = []
 
+        @retry()
         def myrequest(id, article_url, online_threads_lock, parse="online",options=options, until_xpath='.//div[@class="article-citation"]'):
             nonlocal issue_threads
             nonlocal online_threads
@@ -217,7 +217,7 @@ def flush(progress_bar):
                 online_threads.append(new_thread)
             new_thread.run()
 
-        progress_bar(num=30, text="获取issue文献数据……")
+        progress_bar(30, "获取issue文献数据……")
 
         issue_thread_lock = threading.Lock()
         for id, issue_article_entry in enumerate(issue_newest_article_entry):
@@ -226,11 +226,11 @@ def flush(progress_bar):
             future_tasks.append(future)
 
         # 等待线程完成
-        wait(future_tasks, timeout = 180)
+        wait(future_tasks, timeout = 300)
         print("issue 请求完毕")
         future_tasks = []
 
-        progress_bar(num=50, text="获取online文献数据……")
+        progress_bar(50, "获取online文献数据……")
 
         online_threads_lock = threading.Lock()
         for id, online_article_entry in enumerate(online_newest_article_entry):
@@ -241,11 +241,11 @@ def flush(progress_bar):
                 future_tasks.append(future)
 
         # 等待线程完成
-        wait(future_tasks, timeout = 180)
+        wait(future_tasks, timeout = 300)
         print("online 请求完毕")
         future_tasks = []
 
-        progress_bar(num=70, text="解析返回数据……")
+        progress_bar(70, "解析返回数据……")
 
         issue_newest_article_lst = sorted(issue_newest_article_lst, key=lambda x: x[0], reverse=True)
         for id, article in issue_newest_article_lst:
@@ -260,7 +260,7 @@ def flush(progress_bar):
             article_details = article.format()
             print(article_details)
 
-        progress_bar(num=90, text="存入数据库……")
+        progress_bar(90, "存入数据库……")
 
         # exit(00000)
         
@@ -293,9 +293,10 @@ def flush(progress_bar):
             print('Transaction of the Institute of British Geographers_online数据存储成功！')
         except Exception as e:
             print(e)
-            print('数据存储失败！')
+            progress_bar(95, "数据存储失败……重新获取")
+            raise RuntimeError('数据存储失败！')
 
-        progress_bar(num=100, text="完成……")
+        progress_bar(100, "完成……")
         time.sleep(2)
 
 if __name__ == "__main__":
