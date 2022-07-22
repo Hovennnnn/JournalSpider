@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor, wait
 
 from lxml import etree
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 # selenium 4

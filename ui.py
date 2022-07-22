@@ -13,8 +13,6 @@ import sys
 import threading
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-# from PyQt5.Qt import QThreadPool
-from PyQt5.QtCore import QThread
 
 from flush import Flush
 from data_manager.data_mgr import DataManager
@@ -206,7 +204,6 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling) # 不加上这一行，显示结果不一样
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

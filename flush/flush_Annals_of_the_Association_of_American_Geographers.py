@@ -122,6 +122,7 @@ def flush(progress_bar):
             issue_tasks.append(task)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait(issue_tasks))
+    
 
     progress_bar(50, "获取online文献数据……")
 
