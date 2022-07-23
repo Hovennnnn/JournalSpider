@@ -41,7 +41,7 @@ def parse_issue(t):
     tree = etree.HTML(page_text)
     article_title = ''.join(tree.xpath('.//span[@class="NLM_article-title hlFld-title"]//text()')).strip()
     article_author = list(set(tree.xpath('.//span[@class="contribDegrees "]/div/a[@class="author"]/text()')))
-    article_community = list(set(tree.xpath('.//span[@class="overlay"]/text()')))
+    article_community = list(set([community.lstrip(" abcdefghijklmnopqrstuvwxyz") for community in tree.xpath('.//span[@class="overlay"]/text()')]))
     article_publish_date = ''.join(tree.xpath('.//div[@class="widget-body body body-none  body-compact-all"]/div[3]/text()')).replace('Published online: ', '')
     issue_newest_article_lst.append(Article(article_title, article_author, article_community, article_publish_date))
     # except Exception as e:
@@ -55,7 +55,7 @@ def parse_online(t):
     tree = etree.HTML(page_text)
     article_title = ''.join(tree.xpath('.//span[@class="NLM_article-title hlFld-title"]//text()')).strip()
     article_author = list(set(tree.xpath('.//span[@class="contribDegrees "]/div/a[@class="author"]/text()')))
-    article_community = list(set(tree.xpath('.//span[@class="overlay"]/text()')))
+    article_community = list(set([community.lstrip(" abcdefghijklmnopqrstuvwxyz") for community in tree.xpath('.//span[@class="overlay"]/text()')]))
     article_publish_date = ''.join(tree.xpath('.//div[@class="widget-body body body-none  body-compact-all"]/div[3]/text()')).replace('Published online: ', '')
     online_newest_article_lst.append(Article(article_title, article_author, article_community, article_publish_date))
     # except Exception as e:

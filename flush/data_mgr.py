@@ -136,7 +136,7 @@ class DataManager:
         try:
             cur.execute(self.get_all_table_name_sql)
             result = cur.fetchall()
-            result = sorted([i[0] for i in result if i[0] != "sqlite_sequence"], reverse=True)
+            result = sorted([i[0] for i in result if i[0] != "sqlite_sequence"])
             return result
         except Exception as e:
             print(e)
