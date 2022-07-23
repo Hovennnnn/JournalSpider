@@ -188,12 +188,14 @@ def flush(progress_bar):
         newest_issue = ''.join(issue_tree.xpath('//div[@class="main-content col-md-8"]//ul[@class="rlist loc"]//div[@class="cover-image__parent-item"]//text()')).replace(',', '_').replace(' ', '_')
         print('最新issue:', newest_issue)
 
+        progress_bar(10, "获取最新文献数据网址")
+
         issue_newest_article_entry = []
         issue_newest_article_entry.extend(issue_tree.xpath('.//div[@class="issue-items-container bulkDownloadWrapper"][2]/div[@class="issue-item"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
         print(len(issue_newest_article_entry))
 
-        max_page = 1
-        online_urls = [host + f"/action/doSearch?SeriesKey=14755661&sortBy=Earliest&pageSize=20&startPage={page}" for page in range(max_page)]
+        max_page = 2
+        online_urls = [host + f"/action/doSearch?SeriesKey=14755661&sortBy=Earliest&pageSize=50&startPage={page}" for page in range(max_page)]
 
 
         # online 更新

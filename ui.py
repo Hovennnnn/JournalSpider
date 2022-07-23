@@ -12,12 +12,19 @@ import sys
 import threading
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
 from flush import Flush
 from flush.data_mgr import DataManager
 from mini_ui import Ui_Form
 from myThread import MyThread
 
+
+class myQWidget(QtWidgets.QWidget):
+    close_sub_window_signal = pyqtSignal()
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.close_sub_window_signal.emit()
+        return super().closeEvent(a0)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -142,16 +149,20 @@ class Ui_MainWindow(object):
         self.comboBox_2_refresh()
 
     def click_flush(self):
-        # app = QtWidgets.QApplication(sys.argv)
-        self.Form = QtWidgets.QWidget()
+        # 函数中connect 使用lambda函数传参，直接传递函数对象好像不起作用？？？
+        self.Form = myQWidget() # 重载了窗口关闭事件
         mini_ui = Ui_Form()
         thread_i = MyThread(target=Flush.Flushing, which=self.comboBox.currentIndex())
+
         thread_i.progress_trigger.connect(mini_ui.refresh_progressbar)
-        thread_i.end_trigger.connect(lambda : mini_ui.close_request(self.Form))
-        thread_i.end_trigger.connect(self.comboBox_2_refresh)
+
+        thread_i.end_trigger.connect(lambda: self.Form.close())   # 请求结束时关闭子窗口
+        thread_i.end_trigger.connect(lambda: self.comboBox_2_refresh())   # 请求结束时刷新数据
+
         mini_ui.setupUi(self.Form, thread_i, journal=self.comboBox.currentText())
         print(self.comboBox.currentIndex())
-        mini_ui.stop_thread_signal.connect(lambda : mini_ui.close_request(self.Form))
+
+        self.Form.close_sub_window_signal.connect(lambda: mini_ui.close_request()) # 关闭子窗口时关闭线程
         
         thread_i.start()
         self.thread = thread_i

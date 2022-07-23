@@ -1,8 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.Qt import QMutex
-import sys
-from flush import Flush
-
+import time
 
 class MyThread(QThread):
     progress_trigger = pyqtSignal(int, str) # 此处输入待传送数据类型
@@ -18,6 +16,7 @@ class MyThread(QThread):
        # 该线程要干嘛
        self.q_lock.lock()
        self.target(self.which, self.progress_trigger.emit)
+    #    time.sleep(3) # 阻塞3秒，便于看到结果
        self.end_trigger.emit()
        self.q_lock.unlock()
 

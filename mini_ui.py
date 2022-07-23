@@ -10,11 +10,10 @@
 import sys
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.Qt import QObject, pyqtSignal
+from PyQt5.Qt import QObject
 
 
 class Ui_Form(QObject):
-    stop_thread_signal = pyqtSignal() # 关闭线程的信号
 
     def setupUi(self, Form, mini_thread,journal: str):
         Form.setObjectName("Form")
@@ -76,7 +75,8 @@ class Ui_Form(QObject):
         sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
         self.pushButton.setSizePolicy(sizePolicy)
         self.pushButton.setObjectName("pushButton")
-        self.pushButton.clicked.connect(lambda: self.close_request(Form))
+        
+        self.pushButton.clicked.connect(Form.close)
 
         self.horizontalLayout.addWidget(self.pushButton)
         spacerItem1 = QtWidgets.QSpacerItem(97, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -106,14 +106,15 @@ class Ui_Form(QObject):
         if text and type(text) == type("string"):
             self.label_2.setText(text)
 
-    def close_request(self, Form):
+    def close_request(self):
         if self.mini_thread.isRunning():
             self.mini_thread.terminate()
             self.mini_thread.wait()
             self.mini_thread.q_lock.unlock()
+            
+        print(f"关闭线程{self.mini_thread}")
         if self.mini_thread.isFinished():
             del self.mini_thread
-        Form.close()
 
 
 if __name__ == "__main__":
