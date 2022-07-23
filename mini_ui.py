@@ -110,13 +110,11 @@ class Ui_Form(QObject):
         if self.mini_thread.isRunning():
             self.mini_thread.terminate()
             self.mini_thread.wait()
+            self.mini_thread.q_lock.unlock()
         if self.mini_thread.isFinished():
             del self.mini_thread
         Form.close()
-    
-    def closeEvent(self):
-        '''重写关闭窗口事件'''
-        self.stop_thread_signal.emit()
+
 
 if __name__ == "__main__":
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)  # 不加上这一行，显示结果不一样

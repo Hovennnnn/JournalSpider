@@ -1,7 +1,6 @@
 # Geoforum 这个网站使用了5s盾，所以不能用requests库，需要用cloudscraper包解决
 import json
 import os
-import sys
 import threading
 import time
 
@@ -9,9 +8,7 @@ import cloudscraper
 from lxml import etree
 from retry import retry
 
-from article import Article
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))    # 跳到上级目录下面（sys.path添加目录时注意是在windows还是在Linux下，windows下需要‘\\'否则会出错。）
+from flush.article import Article
 
 
 issue_newest_article_lst = []
@@ -30,13 +27,14 @@ class RequestThread(threading.Thread):
         self.thread_lock = thread_lock
         self.scraper = scraper
     
-    @retry()
+    @retry(tries=5)
     def run(self):
         try:
             response = self.scraper.get(self.url, headers=self.headers)
             self.parse_issue(response=response)
         except Exception as e:
-            print(e)
+            print(e, self.url)
+            raise RuntimeError("多线程爬虫出错！", self.url)
 
     def parse_issue(self, response):
         '''Geoforum `issue`'''
@@ -73,8 +71,7 @@ def flush(progress_bar):
     scraper = cloudscraper.create_scraper()
     site_html = scraper.get(host + site_url, headers=headers, timeout=30)#503状态码
     if not site_html.status_code == 200:
-        print('site_html 请求失败，状态码{}'.format(site_html.status_code))
-        return False
+        raise RuntimeError('site_html 请求失败，状态码{}'.format(site_html.status_code))
 
     site_tree = etree.HTML(site_html.text)
     issue_url = site_tree.xpath('//a[@class="anchor js-volume volume-issue-text anchor-default"]')[0].get('href', '')# 注意没有href()的用法
@@ -83,8 +80,7 @@ def flush(progress_bar):
     # issue 更新
     issue_html = scraper.get(issue_url,headers=headers)
     if not issue_html.status_code == 200:
-        print('issue_html 请求失败，状态码{}'.format(issue_html.status_code))
-        return False
+        raise RuntimeError('issue_html 请求失败，状态码{}'.format(issue_html.status_code))
     
     issue_tree = etree.HTML(issue_html.text)
 
@@ -121,12 +117,12 @@ def flush(progress_bar):
     progress_bar(90, "存入数据库")
 
     # 数据送入数据库
-    from data_manager.data_mgr import DataManager
+    from flush.data_mgr import DataManager
 
     try:
         database_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data\\Geoforum.db')
         if not os.path.exists(database_path):
-            with open(database_path, "r") as f:
+            with open(database_path, "w"):
                 pass
             
         my_data_manager = DataManager(database_path=database_path)
@@ -148,4 +144,4 @@ def flush(progress_bar):
     
 
 if __name__ == "__main__":
-    flush()
+    flush(lambda num, text: print(num, text))

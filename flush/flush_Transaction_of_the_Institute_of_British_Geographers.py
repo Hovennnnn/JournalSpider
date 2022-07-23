@@ -1,7 +1,6 @@
 # Transaction of the Institute of British Geographers (更新至Volume 47, Issue 2)
 from multiprocessing.connection import wait
 import os
-import sys
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -15,14 +14,19 @@ from selenium.webdriver.edge.service import Service as EdgeService
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from retry import retry
 
-from article import Article
+from flush.article import Article
+from flush.edgedriver_manager import check_driver_new_version
 
 # --------- selenium config --------------------------
-driver_path = EdgeChromiumDriverManager().install()
+if __name__ == "__main__":
+    driver_path = check_driver_new_version(where="main")
+else:
+    driver_path = check_driver_new_version(where="import")
 
 options = webdriver.EdgeOptions()
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option('useAutomationExtension', False)
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
 options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("--log-level=1")
 options.add_argument('window-size=2160x1440')
@@ -40,6 +44,7 @@ options.page_load_strategy = 'eager'
 prefs = {"profile.managed_default_content_settings.images": 2, 'permissions.default.stylesheet': 2}
 options.add_experimental_option("prefs", prefs)
 options.add_argument("--headless")
+
 
 
 issue_newest_article_lst = []
@@ -170,8 +175,9 @@ def flush(progress_bar):
 
         try:
             WebDriverWait(driver, timeout=30).until(
-                lambda x: x.find_element(By.XPATH, '//div[@class="main-content col-md-8"]//ul[@class="rlist loc"]//div[@class="cover-image__parent-item"]')
+                lambda x: x.find_element(By.XPATH, '//div[@class="issue-items-container bulkDownloadWrapper"][2]/div[@class="issue-item"]')
             )
+            time.sleep(5)
         except:
             raise RuntimeError("latest issue 加载失败！")
 
@@ -264,12 +270,12 @@ def flush(progress_bar):
         # exit(00000)
         
         # 数据送入数据库
-        from data_manager.data_mgr import DataManager
+        from flush.data_mgr import DataManager
         
         try:
             database_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data\\Transaction_of_the_Institute_of_British_Geographers.db')
             if not os.path.exists(database_path):
-                with open(database_path, "r") as f:
+                with open(database_path, "w"):
                     pass
                 
             my_data_manager = DataManager(database_path=database_path)
@@ -299,5 +305,4 @@ def flush(progress_bar):
         time.sleep(2)
 
 if __name__ == "__main__":
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))   # 跳到上级目录下面（sys.path添加目录时注意是在windows还是在Linux下，windows下需要‘\\'否则会出错。）
-    flush()
+    flush(lambda num, text: print(f'{num}%', text))

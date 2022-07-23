@@ -5,7 +5,7 @@ from flush import Flush
 
 
 class MyThread(QThread):
-    trigger = pyqtSignal(int, str) # 此处输入待传送数据类型
+    progress_trigger = pyqtSignal(int, str) # 此处输入待传送数据类型
     end_trigger = pyqtSignal()
     q_lock = QMutex()
  
@@ -17,7 +17,7 @@ class MyThread(QThread):
     def run(self):
        # 该线程要干嘛
        self.q_lock.lock()
-       self.target(self.which, self.trigger.emit)
+       self.target(self.which, self.progress_trigger.emit)
        self.end_trigger.emit()
        self.q_lock.unlock()
 

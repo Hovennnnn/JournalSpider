@@ -1,5 +1,6 @@
 # The Professional Geographer (更新至Volume 74, Issue 3)
 import asyncio
+import os
 import sys
 import time
 
@@ -8,11 +9,11 @@ import requests
 from lxml import etree
 from retry import retry
 
-from article import Article
+from flush.article import Article
 
-sys.path.append("..")    # 跳到上级目录下面（sys.path添加目录时注意是在windows还是在Linux下，windows下需要‘\\'否则会出错。）
+# sys.path.append(os.path.dirname(os.path.dirname(__file__)))   # 跳到上级目录下面（sys.path添加目录时注意是在windows还是在Linux下，windows下需要‘\\'否则会出错。）
 
-CONCURRENT = 30
+CONCURRENT = 10
 
 issue_newest_article_lst = []
 online_newest_article_lst = []
@@ -21,21 +22,17 @@ headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 }
 
-@retry()
-async def get_request(url, semaphore):
+@retry(tries=30, delay=5)
+async def get_request(url, semaphore, sess):
     async with semaphore:
-    # 实例化好了一个请求对象
-        async with aiohttp.ClientSession() as sess:
-            # 调用get发起请求，返回一个响应对象
-            # get/post(url, headers, params/data, proxy='')
-            async with await sess.get(url=url, headers=headers) as response:
-                # text()获取字符串形式的响应数据
-                # read()获取byte类型的响应数据
-                # json()获取字典类型的响应数据
-                page_text = await response.text()
-                if not response.status == 200:
-                    raise
-                return page_text
+        async with await sess.get(url=url, headers=headers) as response:
+            # text()获取字符串形式的响应数据
+            # read()获取byte类型的响应数据
+            # json()获取字典类型的响应数据
+            page_text = await response.text()
+            if not response.status == 200:
+                raise
+            return page_text
 
 def parse_issue(t):
     '''The Professional Geographer `issue`'''
@@ -104,6 +101,7 @@ def flush(progress_bar):
 
     new_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(new_loop)
+    client = aiohttp.ClientSession() # 手动创建一个会话
     
     semaphore = asyncio.Semaphore(CONCURRENT)
     issue_tasks = []
@@ -112,14 +110,12 @@ def flush(progress_bar):
         if 'Article' in ''.join(issue_article_entry.xpath('.//span[@class="article-type"]/text()')):
             article_url = "https://www.tandfonline.com" + issue_article_entry.xpath('.//a[@class="ref nowrap"]')[0].get('href', '')
             issue_article_lst_order.append(''.join(issue_article_entry.xpath('.//span[@class="hlFld-Title"]//text()')))
-            c = get_request(article_url, semaphore)
+            c = get_request(article_url, semaphore, client)
             task = asyncio.ensure_future(c)
             task.add_done_callback(parse_issue)
             issue_tasks.append(task)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(asyncio.wait(issue_tasks))
 
-    progress_bar(50, "获取online文献数据……")
+    progress_bar(40, "获取online文献数据……")
 
     online_tasks = []
     online_article_lst_order = [] # 存下顺序
@@ -127,14 +123,49 @@ def flush(progress_bar):
         if 'Article' in ''.join(online_article_entry.xpath('.//span[@class="article-type"]/text()')):
             article_url = "https://www.tandfonline.com" + online_article_entry.xpath('.//a[@class="ref nowrap"]')[0].get('href', '')
             online_article_lst_order.append(''.join(online_article_entry.xpath('.//span[@class="hlFld-Title"]//text()')))
-            c = get_request(article_url, semaphore)
+            c = get_request(article_url, semaphore, client)
             task = asyncio.ensure_future(c)
             task.add_done_callback(parse_online)
             online_tasks.append(task)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(asyncio.wait(online_tasks))
 
-    progress_bar(70, "解析返回数据……")
+    tasks = issue_tasks + online_tasks
+    async def run():
+        pending = tasks
+        MAX_RETRIES = 8
+        retry_calls = 0
+        while pending and retry_calls < MAX_RETRIES:
+            finished, pending = await asyncio.wait(pending, return_when=asyncio.tasks.ALL_COMPLETED)
+            for task in finished:
+                if task.exception():
+                    print("{} got an exception {}, retrying".format(task, task.exception()))
+                    pending.add(task)
+            print("finished {}".format(len(finished)))
+            print("unfinished {}".format(len(pending)))
+            print("unfinished {}".format(pending))
+            await asyncio.sleep(3)
+            retry_calls = retry_calls + 1
+        if retry_calls >= MAX_RETRIES:
+            progress_bar(20, "网络出现问题，重新抓取")
+
+            #要手动关闭自己创建的ClientSession，并且client.close()是个协程，得用事件循环关闭
+            loop.run_until_complete(client.close())
+            #在关闭loop之前要给aiohttp一点时间关闭ClientSession
+            loop.run_until_complete(asyncio.sleep(3))
+            loop.close()
+            
+            await asyncio.sleep(5)
+            raise RuntimeError("获取超时！重来！")
+
+    progress_bar(50, "抓取并解析返回数据……")
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run())
+
+    #要手动关闭自己创建的ClientSession，并且client.close()是个协程，得用事件循环关闭
+    loop.run_until_complete(client.close())
+    #在关闭loop之前要给aiohttp一点时间关闭ClientSession
+    loop.run_until_complete(asyncio.sleep(3))
+    loop.close()
 
     issue_newest_article_lst = sorted(issue_newest_article_lst, key=lambda x: issue_article_lst_order.index(x.title), reverse=True)
     for article in issue_newest_article_lst:
@@ -151,12 +182,12 @@ def flush(progress_bar):
     progress_bar(90, "存入数据库……")
 
     # 数据送入数据库
-    from data_manager.data_mgr import DataManager
+    from flush.data_mgr import DataManager
     import os
     try:
         database_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data\\The_Professional_Geographer.db')
         if not os.path.exists(database_path):
-            with open(database_path, "r") as f:
+            with open(database_path, "w"):
                 pass
         
         my_data_manager = DataManager(database_path=database_path)

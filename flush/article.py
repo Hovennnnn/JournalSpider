@@ -1,10 +1,10 @@
-from translate import YoudaoSpider, GoogleSpider
+import flush.translate
 import json
 
 class Article:
     def __init__(self, title, author, community, date, url='', journal='Annals of the American Association of Geographers'):
         self.title = title
-        self.chinese_title = GoogleSpider(self.title).translate()
+        self.chinese_title = flush.translate.GoogleSpider(self.title).translate()
         if type(author) == type("string"):
             self.author = author
         else:

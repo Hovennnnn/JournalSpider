@@ -148,7 +148,7 @@ def flush():
 
 
     # 数据送入数据库
-    from data_manager.data_mgr import DataManager
+    from flush.data_mgr import DataManager
 
     try:
         database_path = '..\\data\\Transaction_of_the_Institute_of_British_Geographers.db'

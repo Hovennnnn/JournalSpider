@@ -1,0 +1,10 @@
+{
+    "win64_edgedriver_103.0.1264.71_for_103.0.1264": {
+        "timestamp": "23/07/2022",
+        "binary_path": "c:\\Users\\matebook14\\Documents\\bin\\issue_flush\\flush\\.wdm\\drivers\\edgedriver\\win64\\103.0.1264.71\\msedgedriver.exe"
+    },
+    "win64_edgedriver_103.0.1264.62_for_103.0.1264": {
+        "timestamp": "23/07/2022",
+        "binary_path": "c:\\Users\\matebook14\\Documents\\bin\\issue_flush\\flush\\.wdm\\drivers\\edgedriver\\win64\\103.0.1264.62\\msedgedriver.exe"
+    }
+}
