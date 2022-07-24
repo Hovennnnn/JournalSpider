@@ -1,8 +1,3 @@
-import sys
-import os
-
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from flush import flush_Annals_of_the_Association_of_American_Geographers
 from flush import flush_Geoforum
 from flush import flush_The_Professional_Geographer

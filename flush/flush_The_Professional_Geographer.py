@@ -1,7 +1,5 @@
 # The Professional Geographer (更新至Volume 74, Issue 3)
 import asyncio
-import os
-import sys
 import time
 
 import aiohttp

@@ -1,7 +1,6 @@
 # Annals of the Association of American Geographers (更新至Volume 112, Issue 5)
 import asyncio
 import os
-import sys
 import time
 
 import aiohttp
@@ -10,9 +9,6 @@ from lxml import etree
 from retry import retry
 
 from flush.article import Article
-
-# issue_flush_path = os.path.dirname(os.path.dirname(__file__))
-# sys.path.append(issue_flush_path)
 
 
 issue_newest_article_lst = []
