@@ -55,8 +55,3 @@ cookie仍是`__cf_bm`
 响应
 
 
-
-§ State Key Laboratory of Resources and Environmental Information System, Institute of Geographic Sciences and Natural Resources Research, CAS, China; 
-* State Key Laboratory of Resources and Environmental Information System, Institute of Geographic Sciences and Natural Resources Research, CAS, China, and College of Resources and Environment, University of Chinese Academy of Sciences, China; 
-† State Key Laboratory of Resources and Environmental Information System, Institute of Geographic Sciences and Natural Resources Research, CAS, China, and College of Resources and Environment, University of Chinese Academy of Sciences, China, and Jiangsu Center for Collaborative Innovation in Geographical Information Resource Development and Application and School of Geography, Nanjing Normal University, China; 
-‡ State Key Laboratory of Resources and Environmental Information System, Institute of Geographic Sciences and Natural Resources Research, CAS, China, Jiangsu Center for Collaborative Innovation in Geographical Information Resource Development and Application and School of Geography, Nanjing Normal University, China, and Department of Geography, University of Wisconsin–Madison, USA

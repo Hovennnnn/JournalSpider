@@ -14,7 +14,7 @@ import threading
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
-from flush import Flush
+from flush import Flush, edgedriver_manager
 from flush.data_mgr import DataManager
 from mini_ui import Ui_Form
 from myThread import MyThread
@@ -111,6 +111,10 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+
+        self.renew_driver = QtWidgets.QAction(MainWindow)
+        self.renew_driver.setObjectName("actiongengxinqudong")
+        self.menu.addAction(self.renew_driver)
         self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -135,6 +139,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:10pt; font-weight:600;\">期刊序号：</span></p></body></html>"))
         self.pushButton_2.setText(_translate("MainWindow", "导出"))
         self.menu.setTitle(_translate("MainWindow", "选项"))
+        self.renew_driver.setText(_translate("MainWindow", "更新驱动"))
 
     def mytranslateUi(self, MainWindow):
         self.datapath = [r"data\Annals_of_the_Association_of_American_Geographers.db",
@@ -146,7 +151,30 @@ class Ui_MainWindow(object):
         self.pushButton_2.clicked.connect(lambda: self.export(MainWindow))
         self.comboBox.currentIndexChanged.connect(self.comboBox_2_refresh)
         self.comboBox_2.currentIndexChanged.connect(self.table_show)
+        self.renew_driver.triggered.connect(self.renew_driver_version)
         self.comboBox_2_refresh()
+
+    def renew_driver_version(self):
+        '''更新驱动'''
+        # 函数中connect 使用lambda函数传参，直接传递函数对象好像不起作用？？？
+        self.Form = myQWidget() # 重载了窗口关闭事件
+        mini_ui = Ui_Form()
+        thread_i = MyThread(target=edgedriver_manager.check_driver_new_version)
+
+        thread_i.progress_trigger.connect(mini_ui.refresh_progressbar)
+
+        thread_i.end_trigger.connect(lambda: self.Form.close())   # 请求结束时关闭子窗口
+        thread_i.end_trigger.connect(lambda: self.comboBox_2_refresh())   # 请求结束时刷新数据
+
+        mini_ui.setupUi(self.Form, thread_i, journal=self.comboBox.currentText())
+        print(self.comboBox.currentIndex())
+
+        self.Form.close_sub_window_signal.connect(lambda: mini_ui.close_request()) # 关闭子窗口时关闭线程
+        
+        thread_i.start()
+        self.thread = thread_i
+        self.Form.show()
+
 
     def click_flush(self):
         # 函数中connect 使用lambda函数传参，直接传递函数对象好像不起作用？？？

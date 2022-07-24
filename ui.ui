@@ -186,10 +186,16 @@
     <property name="title">
      <string>选项</string>
     </property>
+    <addaction name="actiongengxin"/>
    </widget>
    <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actiongengxin">
+   <property name="text">
+    <string>更新驱动</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

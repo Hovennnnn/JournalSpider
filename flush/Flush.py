@@ -16,7 +16,7 @@ def Flushing(which, progress_bar):
     elif which == 4:
         flush_The_Geographical_Journal.flush(progress_bar)
     else:
-        pass
+        raise
 
 if __name__ == "__main__":
     for i in range(5):

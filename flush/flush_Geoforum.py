@@ -69,13 +69,14 @@ def flush(progress_bar):
     site_url = "/journal/geoforum"
 
     scraper = cloudscraper.create_scraper()
-    site_html = scraper.get(host + site_url, headers=headers, timeout=30)#503状态码
-    if not site_html.status_code == 200:
-        raise RuntimeError('site_html 请求失败，状态码{}'.format(site_html.status_code))
+    # site_html = scraper.get(host + site_url, headers=headers, timeout=30)#503状态码
+    # if not site_html.status_code == 200:
+    #     raise RuntimeError('site_html 请求失败，状态码{}'.format(site_html.status_code))
 
-    site_tree = etree.HTML(site_html.text)
-    issue_url = site_tree.xpath('//a[@class="anchor js-volume volume-issue-text anchor-default"]')[0].get('href', '')# 注意没有href()的用法
-    issue_url = host + issue_url
+    # site_tree = etree.HTML(site_html.text)
+    # issue_url = site_tree.xpath('//a[@class="anchor js-volume volume-issue-text anchor-default"]')[0].get('href', '')# 注意没有href()的用法
+    # issue_url = host + issue_url
+    issue_url = 'https://www.sciencedirect.com/journal/geoforum/vol/134/suppl/C'
 
     # issue 更新
     issue_html = scraper.get(issue_url,headers=headers)
