@@ -1,5 +1,6 @@
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 import os
+import time
 
 def check_driver_new_version(where="main", progress_bar=None):
     # os.environ['WDM_LOCAL'] = '1'
@@ -13,12 +14,18 @@ def check_driver_new_version(where="main", progress_bar=None):
 
         if progress_bar:
             progress_bar(100, "完成")
+            time.sleep(3)
 
         return driver_path
+
     elif where == "import":
-        with open(os.path.join(os.path.dirname(__file__), "driver_path"), "r") as f:
-            driver_path = f.read()
+        if os.path.exists(os.path.join(os.path.dirname(__file__), "driver_path")):
+            with open(os.path.join(os.path.dirname(__file__), "driver_path"), "r") as f:
+                driver_path = f.read()
+        else:
+            check_driver_new_version(where="main")
         return driver_path
+        
     else:
         raise RuntimeError("where参数错误！")
 
