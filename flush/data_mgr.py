@@ -1,4 +1,7 @@
 import sqlite3
+from docx import Document
+from docx.shared import Pt #（字体大小)
+from docx.oxml.ns import qn # 设置字体格式
 # import os
 # import sys
 
@@ -145,12 +148,76 @@ class DataManager:
             cur.close()
             con.close()
     
-    def export(self, table, filepath):
+    def export(self, table, filepath, filetype):
         table_data = self.get_table_data(table)
-        with open(filepath, 'w', encoding="utf-8") as fp:
+        if filetype == 'Word文档 (*.docx)':
+            doc = Document()
+            doc.styles["Normal"].font.name=u'Times New Roman'  #设置正文西文字体为Times New Roman
+            doc.styles["Normal"]._element.rPr.rFonts.set(qn('w:eastAsia'), u'楷体')  #设置正文中文字体为宋体
+            doc.styles["Normal"].font.size=Pt(12) #设置全局正文为小四（主要是为了列表序号）
             for id, title, author, community, date in table_data:
-                _ = Article(title, author, community, date).format()
-                fp.write(_)
+                article_node = Article(title, author, community, date)
+
+                paragraph1 = doc.add_paragraph(style="List Number")
+                paragraph1.paragraph_format.line_spacing = 1.0
+                paragraph1.paragraph_format.space_before = 0
+                paragraph1.paragraph_format.space_after = 0
+                run1 = paragraph1.add_run(f'{article_node.title}')
+                run1.font.size = Pt(12)
+                run1.bold = True
+
+                paragraph2 = doc.add_paragraph()
+                paragraph2.paragraph_format.line_spacing = 1.0
+                paragraph2.paragraph_format.space_before = 0
+                paragraph2.paragraph_format.space_after = 0
+                run2 = paragraph2.add_run(f'{article_node.chinese_title}')
+                run2.font.size = Pt(12)
+                run2.bold = True
+
+                paragraph3 = doc.add_paragraph()
+                paragraph3.paragraph_format.line_spacing = 1.0
+                paragraph3.paragraph_format.space_before = 0
+                paragraph3.paragraph_format.space_after = 0
+                run3 = paragraph3.add_run(f'作者：{article_node.author}')
+                run3.font.size = Pt(10.5)
+                run3.italic = True
+
+                paragraph4 = doc.add_paragraph()
+                paragraph4.paragraph_format.line_spacing = 1.0
+                paragraph4.paragraph_format.space_before = 0
+                paragraph4.paragraph_format.space_after = 0
+                run4 = paragraph4.add_run(f'单位：{article_node.community}')
+                run4.font.size = Pt(10.5)
+                run4.italic = True
+
+                paragraph5 = doc.add_paragraph()
+                paragraph5.paragraph_format.line_spacing = 1.0
+                paragraph5.paragraph_format.space_before = 0
+                paragraph5.paragraph_format.space_after = 0
+                run5 = paragraph5.add_run(f'发表日期：{article_node.date}')
+                run5.font.size = Pt(10.5)
+                run5.italic = True
+
+                paragraph6 = doc.add_paragraph()
+                paragraph6.paragraph_format.line_spacing = 1.0
+                paragraph6.paragraph_format.space_before = 0
+                paragraph6.paragraph_format.space_after = 0
+                run6 = paragraph5.add_run()
+                run6.font.size = Pt(10.5)
+                run6.italic = True
+
+                # doc.add_paragraph().add_run(f'作者：{article_node.author}\n单位：{article_node.community}\n发表日期：{article_node.date}\n').italic = True
+            doc.save(filepath)
+
+
+        elif filetype == "Text files (*.txt)":
+            with open(filepath, 'w', encoding="utf-8") as fp:
+                for id, title, author, community, date in table_data:
+                    _ = Article(title, author, community, date).format()
+                    fp.write(_)
+        else:
+            raise RuntimeError("filetype 错误！")
+        
 
 
 

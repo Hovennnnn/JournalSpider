@@ -62,6 +62,7 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
+        self.comboBox.addItem("")
         self.horizontalLayout.addWidget(self.comboBox)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
@@ -135,6 +136,7 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(2, _translate("MainWindow", "(自然生态) Geoforum"))
         self.comboBox.setItemText(3, _translate("MainWindow", "(综合顶刊) Transaction of the Institute of British Geographers"))
         self.comboBox.setItemText(4, _translate("MainWindow", "(综合期刊、短小文章) The Geographical Journal"))
+        self.comboBox.setItemText(5, _translate("MainWindow", "(综合期刊、短小文章、教育) Area"))
         self.pushButton.setText(_translate("MainWindow", "更新"))
         self.label_2.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:10pt; font-weight:600;\">期刊序号：</span></p></body></html>"))
         self.pushButton_2.setText(_translate("MainWindow", "导出"))
@@ -146,7 +148,8 @@ class Ui_MainWindow(object):
                          r"data\The_Professional_Geographer.db",
                          r"data\Geoforum.db",
                          r"data\Transaction_of_the_Institute_of_British_Geographers.db",
-                         r"data\The_Geographical_Journal.db"]
+                         r"data\The_Geographical_Journal.db",
+                         r"data\Area.db"]
         self.pushButton.clicked.connect(self.click_flush)
         self.pushButton_2.clicked.connect(lambda: self.export(MainWindow))
         self.comboBox.currentIndexChanged.connect(self.comboBox_2_refresh)
@@ -229,10 +232,10 @@ class Ui_MainWindow(object):
     def export(self, MainWindow):
         mydata_mgr = DataManager(self.datapath[self.comboBox.currentIndex()])
         filename = f"{self.comboBox.currentText()}-{self.comboBox_2.currentText()}"
-        filepath, _ = QtWidgets.QFileDialog.getSaveFileName(MainWindow, "export_data", os.path.join(os.path.dirname(os.path.realpath(sys.executable)), filename), 'txt(*.txt)')
+        filepath, file_type = QtWidgets.QFileDialog.getSaveFileName(MainWindow, "export_data", os.path.join(os.path.dirname(os.path.realpath(sys.executable)), filename), 'Word文档 (*.docx);;Text files (*.txt)')
         print(filepath)
         if filepath:
-            threading.Thread(target=mydata_mgr.export, args=(self.comboBox_2.currentText(), filepath)).start()
+            threading.Thread(target=mydata_mgr.export, args=(self.comboBox_2.currentText(), filepath, file_type)).start()
             # mydata_mgr.export(table=self.comboBox_2.currentText(), filepath=filepath)
 
 

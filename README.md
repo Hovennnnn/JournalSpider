@@ -16,7 +16,8 @@ This repository is a spider for some Journal site.
   - https://rgs-ibg.onlinelibrary.wiley.com/journal/14755661
 - (综合期刊、短小文章) The Geographical Journal (更新至 Volume 188, Issue 2)
   - https://rgs-ibg.onlinelibrary.wiley.com/journal/14754959
-
+- (综合期刊、短小文章、教育) Area 
+  - https://rgs-ibg.onlinelibrary.wiley.com/journal/14754762
 ---
 
 ## 关于 cloudflare5s 盾的处理方法：

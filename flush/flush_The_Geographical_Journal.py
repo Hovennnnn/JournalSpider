@@ -191,7 +191,7 @@ def flush(progress_bar):
 
         issue_newest_article_entry = []
         issue_newest_article_entry.extend(issue_tree.xpath('.//div[@class="issue-items-container bulkDownloadWrapper"][2]/div[@class="issue-item"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
-        print(len(issue_newest_article_entry))
+        # print(len(issue_newest_article_entry))
 
         max_page = 2
         online_urls = [host + f"/action/doSearch?SeriesKey=14754959&sortBy=Earliest&pageSize=50&startPage={page}" for page in range(max_page)]
@@ -206,7 +206,7 @@ def flush(progress_bar):
 
             online_newest_article_entry.extend(online_tree.xpath('.//div[@class="item__body"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
 
-        print(len(online_newest_article_entry))
+        # print(len(online_newest_article_entry))
 
         issue_threads = []
         online_threads = []

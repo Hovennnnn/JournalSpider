@@ -8,7 +8,7 @@ class Article:
         if type(author) == type("string"):
             self.author = author
         else:
-            self.author = '，'.join(author) # 注意这里是列表
+            self.author = ', '.join(author) # 注意这里是列表
         if type(community) == type("string"):
             self.community = community
         else:
@@ -19,7 +19,7 @@ class Article:
         self.journal = journal
 
     def format(self):
-        return f"{self.title}\n{self.chinese_title}\n作者：{self.author}\n单位：{self.community}\n发表日期：{self.date}\n\n"
+        return f"{self.title}\n{self.chinese_title}\n作者：{self.author}\n单位：{self.community}\n发表日期：{self.date}"
 
     def to_dict(self):
         '''

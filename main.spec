@@ -37,7 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='C:\\Users\\matebook14\\Documents\\bin\\issue_flush\\logo.ico',
+    icon='logo.ico',
 )
 coll = COLLECT(
     exe,
