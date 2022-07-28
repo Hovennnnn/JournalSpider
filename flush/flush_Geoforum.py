@@ -194,7 +194,7 @@ def flush(progress_bar):
         
         print(f"issue num: {len(issue_threads)}")
         print(f"online num: {len(online_threads)}")
-        print(f"总线程{len(future_tasks)}")
+        print(f"总线程{len(future_tasks)}(包含重试)")
         # future_tasks = []
 
         progress_bar(80, "解析返回数据……")
