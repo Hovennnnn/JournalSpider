@@ -1,5 +1,5 @@
 # Transaction of the Institute of British Geographers (更新至Volume 47, Issue 2)
-from multiprocessing.connection import wait
+# from multiprocessing.connection import wait
 import os
 import time
 import threading
@@ -213,10 +213,10 @@ def flush(progress_bar):
         future_tasks = []
 
         @retry()
-        def myrequest(id, article_url, online_threads_lock, parse="online",options=options, until_xpath='.//div[@class="article-citation"]'):
+        def myrequest(id, article_url, threads_lock, parse="online",options=options, until_xpath='.//div[@class="article-citation"]'):
             nonlocal issue_threads
             nonlocal online_threads
-            new_thread = SubCrawl(id, article_url, online_threads_lock, parse=parse,options=options, until_xpath=until_xpath)
+            new_thread = SubCrawl(id, article_url, threads_lock, parse=parse,options=options, until_xpath=until_xpath)
             if parse == 'issue':
                 issue_threads.append(new_thread)
             elif parse == 'online':
@@ -228,7 +228,7 @@ def flush(progress_bar):
         issue_thread_lock = threading.Lock()
         for id, issue_article_entry in enumerate(issue_newest_article_entry):
             article_url = host + issue_article_entry.xpath('.//a[@class="issue-item__title visitable"]')[0].get('href', '')
-            future = ThreadPool.submit(myrequest, id, article_url,issue_thread_lock, parse="issue",options=options, until_xpath='.//div[@class="article-citation"]')
+            future = ThreadPool.submit(myrequest, id, article_url, issue_thread_lock, parse="issue",options=options, until_xpath='.//div[@class="article-citation"]')
             future_tasks.append(future)
 
         # 等待线程完成

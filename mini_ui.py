@@ -97,12 +97,27 @@ class Ui_Form(QObject):
         self.label_2.setText(_translate("Form", "<html><head/><body><p align=\"center\">开始</p></body></html>"))
         self.pushButton.setText(_translate("Form", "取消"))
 
-    def refresh_progressbar(self, num: int = None, text: str = None):
-        if num:
-            if num > 100 or num < 0:
-                raise ValueError("进度条越界啦！")
-            else:
-                self.progressBar.setProperty("value", num)
+    def refresh_progressbar(self, num: int = None, text: str = None, mode: str = "replace"):
+        '''
+        mode: mode of progressbar, `replace` is default, you can also choose `add`. 
+        `replace`: num will directly replace the old num.
+        `add`: num will be add to the old num.
+        '''
+        if mode == "replace":
+            if num:
+                if num > 100 or num < 0:
+                    raise ValueError("进度条越界啦！")
+                else:
+                    self.progressBar.setProperty("value", num)
+        elif mode == "add":
+            if num:
+                old_num = self.progressBar.value()
+                num = old_num + num
+                if num > 100 or num < 0:
+                    raise ValueError("进度条越界啦！")
+                else:
+                    self.progressBar.setProperty("value", num)
+
         if text and type(text) == type("string"):
             self.label_2.setText(text)
 
