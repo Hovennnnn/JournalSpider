@@ -20,70 +20,57 @@ r = lts   i = salt  e = word
 # '16549969865516'  有道 lts
 # 'sign: ca53ec0dbad1d3ad020fcfabc86f0387' 32位
 
+import hashlib
+import json
 import random
 import time
-from hashlib import md5
+
 import requests
+from retry import retry
+from func_timeout import func_set_timeout, FunctionTimedOut
 from googletrans import Translator
+
 
 class YoudaoSpider:
 
-    def __init__(self, word):
-        # url一定要写抓包时抓到的POST请求的提交地址，但是还需要去掉 url中的'_o'，
-        # '_o'这是一种url反爬策略，做了页面跳转，若直接访问会返回{"errorCode":50}
-        self.url = 'https://fanyi.youdao.com/translate?smartresult=dict&smartresult=rule'
-        self.headers = {
-            "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    @func_set_timeout(5)
+    def translate(self):
+        """修改简化之后"""
+        url = "http://fanyi.youdao.com/translate_o?smartresult=dict&smartresult=rule"
+        youdao_salt = "Ygy_4c=r#e#4EX^NUGUc5"
+        time_salt = str(int(time.time() * 1000) + random.randint(0, 10))
+        sign_ori = "fanyideskweb" + self.msg + time_salt + youdao_salt
+        sign_hash = hashlib.md5(sign_ori.encode('utf-8')).hexdigest()
+        headers = {
+            'Referer': 'https://fanyi.youdao.com/',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36',
         }
-        self.word = word
-
-    # 获取lts时间戳,salt加密盐,sign加密签名
-    def get_lts_salt_sign(self, word):
-        lts = str(int(time.time() * 10000))
-        salt = lts + str(random.randint(0, 9))
-        string = "fanyideskweb" + word + salt + "Ygy_4c=r#e#4EX^NUGUc5"
-        s = md5()
-        # md5的加密串必须为字节码
-        s.update(string.encode())
-        # 16进制加密
-        sign = s.hexdigest()
-        # print(lts, salt, sign)
-        return lts, salt, sign
-
-    def attack_yd(self, word):
-        lts, salt, sign = self.get_lts_salt_sign(word)
-        # 构建form表单数据
+        cookies = {
+            'OUTFOX_SEARCH_USER_ID':"-193797189@10.105.137.204",
+            'OUTFOX_SEARCH_USER_ID_NCOO':"67845192.25349042",
+            '___rl__test__cookies': "1661481649264"
+        }
         data = {
-            'i': word,
+            'i': self.msg,
             'from': 'AUTO',
             'to': 'AUTO',
             'smartresult': 'dict',
             'client': 'fanyideskweb',
-            'salt': salt,
-            'sign': sign,
-            'lts': lts,
-            'bv': 'bdc0570a34c12469d01bfac66273680d',
+            'salt': time_salt,
+            'sign': sign_hash,
             'doctype': 'json',
-            'version': '2.1',
+            'version': '3.0',
             'keyfrom': 'fanyi.web',
-            'action': 'FY_BY_REALTlME'
+            'action': 'FY_BY_CLICKBUTTION',
+            'typoResult': 'true'
         }
-        # 使用 reqeusts.post()方法提交请求
-        resp = requests.post(self.url, headers=self.headers, data=data)
-        # 将json格式的字符串转为python数据类型
-        html = resp.json()
-        # print(html)
-        # {"translateResult":[[{"tgt":"你好世界","src":"hello world"}]]}
-        res = html['translateResult'][0][0]['tgt']
-        # print('翻译结果：', res)
-        return res
+        res_json = requests.post(url, data=data, headers=headers).json()
+        return res_json["translateResult"][0]
 
-    def translate(self):
-        try:
-            return self.attack_yd(self.word)
-        except Exception as e:
-            print(e)
 
 
 class GoogleSpider(Translator):
@@ -94,6 +81,8 @@ class GoogleSpider(Translator):
         )                                        # 如果可以上外网，还可添加 'translate.google.com' 等
         self.word = word
 
+    @retry(exceptions=FunctionTimedOut, tries=3, delay=2, backoff=2, max_delay=8)
+    @func_set_timeout(5)
     def translate(self):
         trans = super().translate(
             self.word, src='auto', dest='zh-cn'
@@ -106,7 +95,7 @@ class GoogleSpider(Translator):
 
 
 if __name__ == '__main__':
-    spider = YoudaoSpider("youdao")
-    print(spider.translate())
+    # spider = YoudaoSpider("youdao")
+    # print(spider.translate())
     spider1 = GoogleSpider("google")
     print(spider1.translate())
