@@ -154,7 +154,7 @@ def flush(progress_bar):
             await asyncio.sleep(5)
             raise RuntimeError("获取超时！重来！")
 
-    progress_bar(50, "抓取并解析返回数据……")
+    progress_bar(50, "抓取数据……")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run())
@@ -164,6 +164,8 @@ def flush(progress_bar):
     #在关闭loop之前要给aiohttp一点时间关闭ClientSession
     loop.run_until_complete(asyncio.sleep(3))
     loop.close()
+
+    progress_bar(80, "解析数据……")
 
     issue_newest_article_lst = sorted(issue_newest_article_lst, key=lambda x: issue_article_lst_order.index(x.title), reverse=True)
     for article in issue_newest_article_lst:
