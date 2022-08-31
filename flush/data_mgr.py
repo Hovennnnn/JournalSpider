@@ -17,13 +17,14 @@ class DataManager:
         self.create_sql = '''create table if not exists {table}(
             number INTEGER primary key autoincrement,
             title VARCHAR not null,
+            chinese_title VARCHAR,
             author VARCHAR not null,
             community VARCHAR not null,
             date VARCHAR not null
             )'''
         self.search_sql = 'select * from {table} where title=?'
-        self.insert_sql = 'insert into {table}(title,author,community,date) values(?,?,?,?)'
-        self.update_sql = 'update {table} set title=?,author=?,community=?,date=? where title=?'
+        self.insert_sql = 'insert into {table}(title,chinese_title,author,community,date) values(?,?,?,?,?)'
+        self.update_sql = 'update {table} set title=?,chinese_title=?,author=?,community=?,date=? where title=?'
         self.delete_sql = 'delete from {table} where title=?'
         self.get_table_header_sql = 'select * from {table}'
         self.get_table_data_sql = 'select * from {table}'
@@ -58,31 +59,44 @@ class DataManager:
             return result
         except Exception as e:
             print(e)
-            print(f'查询{title:<200}失败')
+            print(f'查询{title:<150}失败')
         finally:
             cur.close()
             con.close()
 
 
-    def insert_data(self, table, title, author, community, date):
+    def insert_data(self, table, title, chinese_title, author, community, date):
         con = sqlite3.connect(self.database_path)
         cur = con.cursor()
 
         try:
-            cur.execute(self.insert_sql.format(table=table), (title, author, community, date))
+            cur.execute(self.insert_sql.format(table=table), (title, chinese_title, author, community, date))
             con.commit()
-            print(f'插入| {title:<200} |成功')
+            print(f'插入| {title:<150} |成功')
         except Exception as e:
             print(e)
             con.rollback()
-            print(f'插入| {title:<200} |失败')
+            print(f'插入| {title:<150} |失败')
         finally:
             cur.close()
             con.close()
 
 
-    def update_data(self, table, title):
-        pass
+    def update_data(self, table, title, chinese_title, author, community, date):
+        con = sqlite3.connect(self.database_path)
+        cur = con.cursor()
+
+        try:
+            cur.execute(self.update_sql.format(table=table),  (title, chinese_title, author, community, date, title))
+            con.commit()
+            print(f'更新 | {title:<150} | 成功')
+        except Exception as e:
+            print(e)
+            con.rollback()
+            print(f'更新| {title:<150} |失败')
+        finally:
+            cur.close()
+            con.close()
 
 
     def delete_data(self, table, title):
@@ -92,10 +106,10 @@ class DataManager:
         try:
             cur.execute(self.delete_sql.format(table=table), (title, )) # 注意，元组只有一个元素时，必须加逗号
             con.commit()
-            print(f'删除{table:<30}中的{title:<200}成功')
+            print(f'删除{table:<30}中的{title:<150}成功')
         except Exception as e:
             print(e)
-            print(f'删除{table:<30}中的{title:<200}失败')
+            print(f'删除{table:<30}中的{title:<150}失败')
             con.rollback()
         finally:
             cur.close()
@@ -127,7 +141,7 @@ class DataManager:
             return result
         except Exception as e:
             print(e)
-            print(f'获取表格{table:<200}失败')
+            print(f'获取表格{table:<150}失败')
         finally:
             cur.close()
             con.close()
@@ -155,8 +169,8 @@ class DataManager:
             doc.styles["Normal"].font.name=u'Times New Roman'  #设置正文西文字体为Times New Roman
             doc.styles["Normal"]._element.rPr.rFonts.set(qn('w:eastAsia'), u'楷体')  #设置正文中文字体为宋体
             doc.styles["Normal"].font.size=Pt(12) #设置全局正文为小四（主要是为了列表序号）
-            for id, title, author, community, date in table_data:
-                article_node = Article(title, author, community, date)
+            for id, title, chinese_title, author, community, date in table_data:
+                article_node = Article(title=title, chinese_title=chinese_title, author=author, community=community, date=date)
 
                 paragraph1 = doc.add_paragraph(style="List Number")
                 paragraph1.paragraph_format.line_spacing = 1.0
@@ -229,7 +243,7 @@ if __name__ == "__main__":
         print('查询成功')
     else:
         print('查询失败')
-    my_data_manager.insert_data('test', 'hello', 'hoven', 'Peking University', '29 June 2022')
+    my_data_manager.insert_data('test', 'hello', "你好",'hoven', 'Peking University', '29 June 2022', "")
     if my_data_manager.search_data('test', 'hello'):
         print('查询成功')
     else:
