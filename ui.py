@@ -210,7 +210,7 @@ class Ui_MainWindow(object):
         # self.table_show()
 
     def table_show(self):
-        table_header = ["序号", "标题", "作者", "发表单位", "发表日期"]
+        table_header = ["序号", "标题", "中文标题", "作者", "发表单位", "发表日期"]
         self.player_model = QtGui.QStandardItemModel()
         self.player_model.setHorizontalHeaderLabels(table_header)
         # for c, cell in enumerate(table_header):

@@ -17,7 +17,7 @@ online_newest_article_lst = []
 headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 }
-CONCURRENT = 10 # 最大并发数量
+CONCURRENT = 10    # 最大并发数量
 
 
 @retry(tries=30, delay=5)
@@ -32,6 +32,7 @@ async def get_request(url, semaphore, sess):
                 raise
             return page_text
 
+
 def parse_issue(t):
     """Annals of the Association of American Geographers `issue`"""
     # try:
@@ -42,9 +43,10 @@ def parse_issue(t):
     article_community = list(set([community.lstrip(" ‡†*†#§¶") for community in tree.xpath('.//span[@class="overlay"]/text()')]))
     article_publish_date = ''.join(tree.xpath('.//div[@class="widget-body body body-none  body-compact-all"]/div[3]/text()')).replace('Published online: ', '').strip() # 去除结尾很多回车
     issue_newest_article_lst.append(Article(article_title, article_author, article_community, article_publish_date))
-    # except Exception as e:
-        # print(e)
-        # print('解析issue返回值失败！')
+                                                                                                                                                                        # except Exception as e:
+                                                                                                                                                                        # print(e)
+                                                                                                                                                                        # print('解析issue返回值失败！')
+
 
 def parse_online(t):
     '''Annals of the Association of American Geographers `online`'''
@@ -56,9 +58,10 @@ def parse_online(t):
     article_community = list(set([community.lstrip(" ‡†*†#§¶") for community in tree.xpath('.//span[@class="overlay"]/text()')]))
     article_publish_date = ''.join(tree.xpath('.//div[@class="widget-body body body-none  body-compact-all"]/div[3]/text()')).replace('Published online: ', '').strip() # 去除结尾很多回车
     online_newest_article_lst.append(Article(article_title, article_author, article_community, article_publish_date))
-    # except Exception as e:
-    #     print(e)
-    #     print('解析online返回值失败！')
+                                                                                                                                                                        # except Exception as e:
+                                                                                                                                                                        #     print(e)
+                                                                                                                                                                        #     print('解析online返回值失败！')
+
 
 @retry()
 def flush(progress_bar):
@@ -71,38 +74,38 @@ def flush(progress_bar):
     # issue 更新
     issue_newest_article_entry = []
     for issue_url in issue_urls:
-        issue_html = requests.get(issue_url,headers=headers)
+        issue_html = requests.get(issue_url, headers=headers)
         issue_tree = etree.HTML(issue_html.text)
-        
-        newest_issue = ''.join(issue_tree.xpath('//div[@class="col-md-1-6 coverCol"]//div[@class="toc-title"]/h1/text()')).replace('Annals of the American Association of Geographers, ', '').replace(' ', '_').replace(',', '').replace('(', '').replace(')', '')
+
+        newest_issue = ''.join(issue_tree.xpath('//div[@class="col-md-1-6 coverCol"]//div[@class="toc-title"]/h1/text()')).replace('Annals of the American Association of Geographers, ',
+                                                                                                                                   '').replace(' ', '_').replace(',', '').replace('(', '').replace(')', '')
         print('最新issue:', newest_issue)
 
-
-        issue_newest_article_entry.extend(issue_tree.xpath('.//div[@class="tocContent"]/div[@class="articleEntry"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
+        issue_newest_article_entry.extend(issue_tree.xpath('.//div[@class="tocContent"]/div[@class="articleEntry"]')) # 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
         nextpage = issue_tree.xpath('.//a[@class="nextPage"]')
         if nextpage:
             nextpage_href = nextpage[0].get('href', '')
-            issue_urls.append('https://www.tandfonline.com' + nextpage_href) # 如果存在下一页
+            issue_urls.append('https://www.tandfonline.com' + nextpage_href)                                          # 如果存在下一页
 
     # online 更新
     online_newest_article_entry = []
     for online_url in online_urls:
-        online_html = requests.get(online_url,headers=headers)
+        online_html = requests.get(online_url, headers=headers)
         online_tree = etree.HTML(online_html.text)
         # newest_issue = tree.xpath('/html/head/title/text()')[0]
         # print(newest_issue)
-        online_newest_article_entry.extend(online_tree.xpath('.//div[@class="tocContent"]/div[@class="articleEntry"]'))# 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
+        online_newest_article_entry.extend(online_tree.xpath('.//div[@class="tocContent"]/div[@class="articleEntry"]')) # 加点表示从当前节点以后开始搜索，不然这个节点之前的也会搜索
         nextpage = online_tree.xpath('.//a[@class="nextPage"]')
         if nextpage:
             nextpage_href = nextpage[0].get('href', '')
-            online_urls.append('https://www.tandfonline.com' + nextpage_href) # 如果存在下一页
+            online_urls.append('https://www.tandfonline.com' + nextpage_href)                                           # 如果存在下一页
 
     progress_bar(30, "获取issue文献数据……")
 
     new_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(new_loop)
     client = aiohttp.ClientSession() # 手动创建一个会话
-    
+
     semaphore = asyncio.Semaphore(CONCURRENT)
     issue_tasks = []
     issue_article_lst_order = [] # 存下顺序
@@ -129,6 +132,7 @@ def flush(progress_bar):
             online_tasks.append(task)
 
     tasks = issue_tasks + online_tasks
+
     async def run():
         pending = tasks
         MAX_RETRIES = 8
@@ -152,7 +156,7 @@ def flush(progress_bar):
             #在关闭loop之前要给aiohttp一点时间关闭ClientSession
             loop.run_until_complete(asyncio.sleep(3))
             loop.close()
-            
+
             await asyncio.sleep(5)
             raise RuntimeError("获取超时！重来！")
 
@@ -174,8 +178,7 @@ def flush(progress_bar):
         article_details = article.format()
         print(article_details)
 
-
-    print('-'*50)
+    print('-' * 50)
     online_newest_article_lst = sorted(online_newest_article_lst, key=lambda x: online_article_lst_order.index(x.title), reverse=True)
     for article in online_newest_article_lst:
         article_details = article.format()
@@ -195,27 +198,51 @@ def flush(progress_bar):
         my_data_manager.create_table(newest_issue)
         for article in issue_newest_article_lst:
             if not my_data_manager.search_data(newest_issue, article.title):
-                my_data_manager.insert_data(newest_issue, article.title, article.author, article.community, article.date)
+                my_data_manager.insert_data(table=newest_issue, 
+                                            title=article.title, 
+                                            chinese_title=article.chinese_title, 
+                                            author=article.author, 
+                                            community=article.community, 
+                                            date=article.date)
             else:
-                print(f'{article.title:<200} |已存在于 Annals of the Association of American Geographers_issue')
+                my_data_manager.update_data(
+                                            table=newest_issue,
+                                            title = article.title,
+                                            chinese_title=article.chinese_title,
+                                            author = article.author,
+                                            community = article.community,
+                                            date = article.date
+                                            )
         print('Annals of the Association of American Geographers_issue数据存储成功！')
 
-        print('-'*200)
+        print('-' * 200)
 
         my_data_manager.create_table('online')
         for article in online_newest_article_lst:
             if not my_data_manager.search_data('online', article.title):
-                my_data_manager.insert_data('online', article.title, article.author, article.community, article.date)
+                my_data_manager.insert_data(table='online', 
+                                            title=article.title, 
+                                            chinese_title=article.chinese_title, 
+                                            author=article.author, 
+                                            community=article.community, 
+                                            date=article.date)
             else:
-                print(f'{article.title:<200} |已存在于 Annals of the Association of American Geographers_online')
+                my_data_manager.update_data(
+                                            table="online",
+                                            title = article.title,
+                                            chinese_title=article.chinese_title,
+                                            author = article.author,
+                                            community = article.community,
+                                            date = article.date
+                                            )
         print('Annals of the Association of American Geographers_online数据存储成功！')
     except Exception as e:
         print(e)
         print('online数据存储失败！')
 
-
     progress_bar(100, "完成")
     time.sleep(2)
+
 
 if __name__ == "__main__":
     flush(lambda num, text: print(num, text))

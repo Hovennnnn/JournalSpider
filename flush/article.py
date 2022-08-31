@@ -3,12 +3,17 @@ import json
 import func_timeout
 
 class Article:
-    def __init__(self, title, author, community, date, url='', journal='Annals of the American Association of Geographers'):
+    def __init__(self, title, author, community, date, chinese_title=None, url='', journal='Annals of the American Association of Geographers'):
         self.title = title
+        
         try:
-            self.chinese_title = flush.translate.GoogleSpider(self.title).translate()
+            if chinese_title is not None and chinese_title != "":
+                self.chinese_title = chinese_title
+            else:
+                self.chinese_title = flush.translate.GoogleSpider(self.title).translate()
         except func_timeout.exceptions.FunctionTimedOut:
             self.chinese_title = ""
+
         if type(author) == type("string"):
             self.author = author
         else:

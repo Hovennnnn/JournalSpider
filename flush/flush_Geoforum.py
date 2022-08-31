@@ -225,17 +225,40 @@ def flush(progress_bar):
             my_data_manager.create_table(newest_issue)
             for id, article in issue_newest_article_lst:
                 if not my_data_manager.search_data(newest_issue, article.title):
-                    my_data_manager.insert_data(newest_issue, article.title, article.author, article.community, article.date)
+                    my_data_manager.insert_data(table=newest_issue, 
+                                                title=article.title, 
+                                                chinese_title=article.chinese_title, 
+                                                author=article.author, 
+                                                community=article.community, 
+                                                date=article.date)
                 else:
-                    print(f'{article.title:<200} |已存在于 The Professional Geographer_issue')
-            
+                    my_data_manager.update_data(
+                                            table=newest_issue,
+                                            title = article.title,
+                                            chinese_title=article.chinese_title,
+                                            author = article.author,
+                                            community = article.community,
+                                            date = article.date
+                                            )      
+
             my_data_manager.create_table("online")
             for id, article in online_newest_article_lst:
                 if not my_data_manager.search_data("online", article.title):
-                    my_data_manager.insert_data("online", article.title, article.author, article.community, article.date)
+                    my_data_manager.insert_data(table="online", 
+                                                title=article.title, 
+                                                chinese_title=article.chinese_title, 
+                                                author=article.author, 
+                                                community=article.community, 
+                                                date=article.date)
                 else:
-                    print(f'{article.title:<200} |已存在于 The Professional Geographer_online')
-
+                    my_data_manager.update_data(
+                                            table="online",
+                                            title = article.title,
+                                            chinese_title=article.chinese_title,
+                                            author = article.author,
+                                            community = article.community,
+                                            date = article.date
+                                            )
             print('Geoforum_issue数据存储成功！')
             progress_bar(100, "完成")
             time.sleep(2)
